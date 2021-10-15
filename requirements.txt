@@ -4,3 +4,9 @@ opencv-python==4.5.3.56
 pytesseract==0.3.8
 pillow==8.3.2
 python-Levenshtein==0.12.2
+google-cloud-speech==2.10.0
+gingerit==0.8.2
+nltk==3.6.5
+torch==1.8.1
+pytorch-crf==0.7.2
+transformers==2.11.0
