@@ -1,1 +1,4 @@
 .idea/
+*.pt
+src/models/punctuation_restoration/data/bn
+src/models/punctuation_restoration/data/en
