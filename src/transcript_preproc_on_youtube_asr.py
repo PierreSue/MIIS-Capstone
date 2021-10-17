@@ -15,7 +15,7 @@ from typing import List
 from tqdm import tqdm
 
 from src.models.punctuation_restoration import PUNCTUATION_RESTORATION_PATH
-from src.preprocessing.utils import START_TIMESTAMP, segment_sentence
+from src.utils import START_TIMESTAMP, segment_sentence
 
 
 def timestamp_to_seconds(time_str: str):
@@ -103,9 +103,12 @@ def run():
         "01:06:00",
         "01:07:44"
     ]
+    caption_file = '/home/jingrong/capstone/data/segmentation/captions_Human_Speech.sbv'
+    output_file = '/home/jingrong/capstone/data/segmentation/segmented_transcript.json'
+
     segments = merge_and_segment_transcript(
         segment_boundaries=boundaries,
-        caption_file='/home/jingrong/capstone/data/segmentation/captions_Human_Speech.sbv'
+        caption_file=caption_file
     )
     print('\n\n', '*' * 100, 'Before Punctuation and Capitalization Restoration', '*' * 100, '\n\n')
     for segment in segments:
@@ -124,7 +127,7 @@ def run():
         "start_timestamp": start_s,
         "transcript": segment
     } for start_s, segment in zip(boundaries, restored_transcript_segments)]
-    with open('/home/jingrong/capstone/data/segmentation/segmented_transcript.json', 'w') as json_file:
+    with open(output_file, 'w') as json_file:
         json.dump(boundaries_and_segments, json_file, indent=4, ensure_ascii=False)
 
 

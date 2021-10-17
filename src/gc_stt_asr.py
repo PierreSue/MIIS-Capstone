@@ -6,14 +6,17 @@
 @file: gc_stt_asr.py
 @time: 10/14/21
 
-Prerequisites: Follow step2 to step5 on setup environment and authenticate API requests
+Prerequisites:
+Follow step2 to step5 on https://codelabs.developers.google.com/codelabs/cloud-speech-text-python3
+to setup environment and authenticate API requests
+
 """
 from time import time
 from typing import List
 
 from google.cloud import speech
 
-from src.preprocessing.utils import START_TIMESTAMP
+from src.utils import START_TIMESTAMP
 
 
 def get_word_offsets(alternative) -> List[str]:

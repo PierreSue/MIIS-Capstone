@@ -12,7 +12,7 @@ from tqdm import tqdm
 
 from gingerit.gingerit import GingerIt
 
-from src.preprocessing.utils import segment_sentence
+from src.utils import segment_sentence
 
 
 def grammar_correction(paragraph: str) -> str:
@@ -25,11 +25,14 @@ def grammar_correction(paragraph: str) -> str:
 
 
 def run():
-    with open('/home/jingrong/capstone/data/segmentation/segmented_transcript.json', 'r') as f_in:
+    input_path = '/home/jingrong/capstone/data/segmentation/segmented_transcript.json'
+    output_path = '/home/jingrong/capstone/data/result-grammar_corrected.json'
+
+    with open(input_path, 'r') as f_in:
         boundaries_and_segments = json.load(f_in)
     for segment in boundaries_and_segments:
         segment['transcript-corrected'] = grammar_correction(segment['transcript'])
-    with open('/home/jingrong/capstone/data/segmentation/segmented_transcript-grammar_corrected.json', 'w') as f_out:
+    with open(output_path, 'w') as f_out:
         json.dump(boundaries_and_segments, f_out, indent=4, ensure_ascii=False)
 
 
