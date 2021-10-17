@@ -30,7 +30,7 @@ from tqdm import tqdm
 from src.models.segmentation.utils import is_segment_boundary, OCRTextExtractor
 
 
-def video_segmentation(opt) -> List[str]:
+def video_segmentation(opt: argparse.Namespace) -> List[str]:
     assert opt.num_frame_forward >= 3, 'At least 3 frames forward'
     
     filename = opt.video_path

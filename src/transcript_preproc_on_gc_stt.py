@@ -10,7 +10,7 @@ import math
 from datetime import datetime
 from typing import List
 
-from src.preprocessing.utils import START_TIMESTAMP
+from src.utils import START_TIMESTAMP
 
 
 def timestamp_to_seconds(time_str: str):

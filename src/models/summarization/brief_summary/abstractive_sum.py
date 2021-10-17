@@ -13,7 +13,7 @@ import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 from transformers import PegasusForConditionalGeneration, PegasusTokenizer
 import torch
-from copy import deepcopy
+
 
 def brief_summary(srces):
     model_name = 'google/pegasus-xsum'
@@ -28,4 +28,3 @@ def brief_summary(srces):
         tgt_text = tokenizer.batch_decode(translated, skip_special_tokens=True)
         res.append(tgt_text[0])
     return res
-

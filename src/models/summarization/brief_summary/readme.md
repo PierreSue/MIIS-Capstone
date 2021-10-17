@@ -28,7 +28,7 @@ I will add an abstractive summarization into the output file, which makes each e
         "start_timestamp": "00:00:00",
         "transcript": "Okay, xxxx vocal",
         "transcript-corrected": "Okay, xxxx vocal",
-        "brief-summary": "xx"
+        "summary-brief": "xx"
     }
 
 ]
