@@ -1,0 +1,14 @@
+[
+    {
+        "start_timestamp": "00:00:00",
+        "transcript": "Test transcript 0",
+        "transcript-corrected": "Test corrected 0",
+        "brief-summary": "Hello everyone, and welcome to today's lecture. I'm not going into much detail, but I'm just making sure that you have some understanding of, uh, of the background."
+    },
+    {
+        "start_timestamp": "00:01:16",
+        "transcript": "Test transcript",
+        "transcript-corrected": "Test corrected",
+        "brief-summary": "We're going to talk a little bit about speech."
+    }
+]
