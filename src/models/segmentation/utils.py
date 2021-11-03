@@ -6,7 +6,7 @@
 @file: utils.py
 @time: 9/30/21
 """
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
 
 import cv2
 import numpy as np
@@ -33,8 +33,15 @@ class OCRTextExtractor(object):
         _, binary_image = cv2.threshold(image_gray, bi_threshold, 255, cv2.THRESH_BINARY)
         return Image.fromarray(binary_image)
 
-    def batch_ocr(self, batch_image: np.ndarray, batch_second: List[int], bi_threshold: int) -> List[Dict[str, str]]:
-        assert len(batch_image) == len(batch_second)
+    def batch_ocr(self,
+                  batch_image: np.ndarray,
+                  bi_threshold: int,
+                  batch_second: Optional[List[int]] = None) -> List[Dict[str, str]]:
+        if batch_second:
+            assert len(batch_image) == len(batch_second)
+        else:
+            batch_second = list(range(len(batch_image)))
+
         extracted_text_lst = []
         for image, second in zip(batch_image, batch_second):
             if second in self.second_to_text_info:
@@ -49,6 +56,7 @@ class OCRTextExtractor(object):
                 }
                 self.second_to_text_info[second] = text_info
             extracted_text_lst.append(text_info)
+
         return extracted_text_lst
 
 
