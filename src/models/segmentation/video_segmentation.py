@@ -20,6 +20,8 @@ Return:
 List[str]: timestamps of segment boundaries in HH:MM:SS format
 """
 import argparse
+import json
+import os
 from time import strftime, gmtime
 from typing import List
 
@@ -123,10 +125,10 @@ def video_segmentation(opt: argparse.Namespace) -> List[str]:
     return valid_boundaries
 
 
-if __name__ == '__main__':
+def parse_arguments():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--video-path', type=str, default='../Data/11492_02_Human_Speech.mp4',
-                        help='The input video path')
+    parser.add_argument('--video-path', type=str, help='The input video path')
+    parser.add_argument('--output-path', type=str, help='The output json file path')
     parser.add_argument('--interval', type=int, default=2,
                         help='The interval between each image in seconds. (An image/N sec)')
     parser.add_argument('--threshold-pixel', type=int, default=0.05,
@@ -143,7 +145,21 @@ if __name__ == '__main__':
     parser.add_argument('--bi-threshold', type=int, default=100,
                         help='The threshold for image binarization (0, 255), 0->black and 1->white (2nd stage)')
 
-    opt = parser.parse_args()
-    cutpoints = video_segmentation(opt)
-    for idx, cutpoint in enumerate(cutpoints):
-        print(idx + 1, '\t', cutpoint)
+    return parser.parse_args()
+
+
+if __name__ == '__main__':
+    opt = parse_arguments()
+    boundaries = video_segmentation(opt)
+
+    if os.path.exists(opt.output_path):
+        with open(opt.output_path, 'r') as json_file:
+            data = json.load(json_file)
+    else:
+        data = dict()
+    assert 'segmentation_boundaries' not in data, f"'segmentation_boundaries' already exists in {opt.output_path}"
+    data['segmentation_boundaries'] = boundaries
+    with open(opt.output_path, 'w') as json_file:
+        json.dump(data, json_file, indent=4, ensure_ascii=False)
+    # for idx, cutpoint in enumerate(boundaries):
+    #     print(idx + 1, '\t', cutpoint)

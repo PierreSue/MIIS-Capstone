@@ -3,16 +3,18 @@
 @author: Jingrong Feng
 @contact: jingronf@andrew.cmu.edu
 @version: 0.1
-@file: grammar_correction.py
+@file: 3_grammar_correction.py
 @time: 10/15/21
 """
 import json
+import os
 
 from tqdm import tqdm
 
 from gingerit.gingerit import GingerIt
 
 from src.utils import segment_sentence
+from src.conf import DATA_DIR, VIDEO_ID
 
 
 def grammar_correction(paragraph: str) -> str:
@@ -25,15 +27,14 @@ def grammar_correction(paragraph: str) -> str:
 
 
 def run():
-    input_path = '/home/jingrong/capstone/data/segmentation/segmented_transcript.json'
-    output_path = '/home/jingrong/capstone/data/result-grammar_corrected.json'
-
-    with open(input_path, 'r') as f_in:
-        boundaries_and_segments = json.load(f_in)
-    for segment in boundaries_and_segments:
-        segment['transcript-corrected'] = grammar_correction(segment['transcript'])
-    with open(output_path, 'w') as f_out:
-        json.dump(boundaries_and_segments, f_out, indent=4, ensure_ascii=False)
+    result_file = os.path.join(DATA_DIR, "results", VIDEO_ID + '.json')
+    with open(result_file, 'r') as json_file:
+        data = json.load(json_file)
+    for segment in data['segments']:
+        segment['transcript_corrected'] = grammar_correction(segment['transcript'])
+    with open(result_file, 'w') as f_out:
+        json.dump(data, f_out, indent=4, ensure_ascii=False)
+    print(f'Results have been saved to {result_file}')
 
 
 if __name__ == '__main__':

@@ -3,7 +3,7 @@
 @author: Jingrong Feng and Zhihao Wang
 @contact: jingronf@andrew.cmu.edu and zhihaow2@andrew.cmu.edu
 @version: 0.1
-@file: transcript_preproc_on_youtube_asr.py
+@file: 2_transcript_preproc_on_youtube_asr.py
 @time: 10/5/21
 """
 import json
@@ -15,7 +15,8 @@ from typing import List
 from tqdm import tqdm
 
 from src.models.punctuation_restoration import PUNCTUATION_RESTORATION_PATH
-from src.utils import START_TIMESTAMP, segment_sentence
+from src.utils import START_TIMESTAMP, segment_sentence, add_key_value_into_jsonfile
+from src.conf import DATA_DIR, VIDEO_ID
 
 
 def timestamp_to_seconds(time_str: str):
@@ -79,44 +80,23 @@ def restore_punctuation_and_capitalization(transcript_segments: List[str]) -> Li
 
 
 def run():
-    boundaries = [
-        "00:01:16",
-        "00:03:42",
-        "00:12:16",
-        "00:15:08",
-        "00:16:52",
-        "00:18:36",
-        "00:21:36",
-        "00:23:56",
-        "00:26:10",
-        "00:32:56",
-        "00:36:30",
-        "00:37:42",
-        "00:38:42",
-        "00:42:46",
-        "00:43:50",
-        "00:49:34",
-        "00:54:30",
-        "00:55:16",
-        "00:59:38",
-        "01:03:16",
-        "01:06:00",
-        "01:07:44"
-    ]
-    caption_file = '/home/jingrong/capstone/data/segmentation/captions_Human_Speech.sbv'
-    output_file = '/home/jingrong/capstone/data/segmentation/segmented_transcript.json'
+    caption_file = os.path.join(DATA_DIR, "youtube_asr", VIDEO_ID + '.sbv')
+    result_file = os.path.join(DATA_DIR, "results", VIDEO_ID + '.json')
+    with open(result_file, 'r') as json_file:
+        data = json.load(json_file)
 
+    boundaries = data['segmentation_boundaries']
     segments = merge_and_segment_transcript(
         segment_boundaries=boundaries,
         caption_file=caption_file
     )
-    print('\n\n', '*' * 100, 'Before Punctuation and Capitalization Restoration', '*' * 100, '\n\n')
+    print('\n\n', '*' * 25, 'Before Punctuation and Capitalization Restoration', '*' * 25, '\n\n')
     for segment in segments:
         print(segment)
         print('\n', '*' * 100, '\n')
 
     restored_transcript_segments = restore_punctuation_and_capitalization(segments)
-    print('\n\n', '*' * 100, 'After Punctuation and Capitalization Restoration', '*' * 100, '\n\n')
+    print('\n\n', '*' * 25, 'After Punctuation and Capitalization Restoration', '*' * 25, '\n\n')
     for segment in restored_transcript_segments:
         print(segment)
         print('\n', '*' * 100, '\n')
@@ -127,8 +107,9 @@ def run():
         "start_timestamp": start_s,
         "transcript": segment
     } for start_s, segment in zip(boundaries, restored_transcript_segments)]
-    with open(output_file, 'w') as json_file:
-        json.dump(boundaries_and_segments, json_file, indent=4, ensure_ascii=False)
+
+    add_key_value_into_jsonfile(result_file, 'segments', boundaries_and_segments)
+    print(f'Results have been saved to {result_file}')
 
 
 if __name__ == '__main__':
