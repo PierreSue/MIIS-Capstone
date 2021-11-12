@@ -40,6 +40,6 @@ if __name__ == '__main__':
         os.makedirs(opt.image_dir)
 
     valid_boundaries, segments, images = video_segmentation(opt)
-    for i, segment in enumerate(segments):
-        im = Image.fromarray(images[segment])
+    for i, (segmentA, segmentB) in enumerate(zip(segments[:-1], segments[1:])):
+        im = Image.fromarray(images[(segmentA+segmentB)//2])
         im.save(os.path.join(opt.image_dir, '{}.jpg'.format(i)))

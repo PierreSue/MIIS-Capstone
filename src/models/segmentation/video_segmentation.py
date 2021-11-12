@@ -88,10 +88,7 @@ def video_segmentation(opt: argparse.Namespace) -> List[str]:
         else:
             diff_areas.append(np.sum(diff_map) / (m * n))
             if np.sum(diff_map) / (m * n) > opt.threshold_pixel:
-                cutpoints.append((image_id + 1) * opt.interval)
-
-    for i, cutpoint in enumerate(cutpoints):
-        cutpoints[i] = (cutpoint // opt.interval, cutpoint)
+                cutpoints.append((image_id+1, (image_id+1)*opt.interval))
 
     print("Cutpoints at the first stage: {} cutpoints".format(len(cutpoints)))
     print([strftime("%H:%M:%S", gmtime(cutpoint[1])) for cutpoint in cutpoints])
@@ -100,7 +97,7 @@ def video_segmentation(opt: argparse.Namespace) -> List[str]:
     # cutpoints: the list of the cutpoints(tuples) -> [(image_id, timestamp_in_seconds), (), ...]
 
     ocr_extractor = OCRTextExtractor()
-    valid_boundaries, segments = [], []
+    valid_boundaries, segments = [], [0]
     last_boundary = 0
     for idx, (image_id, second) in tqdm(enumerate(cutpoints), total=len(cutpoints), desc='Second stage', ncols=80):
         # the first and last one frames cannot be boundaries
@@ -121,7 +118,7 @@ def video_segmentation(opt: argparse.Namespace) -> List[str]:
             segments.append(image_id)
             last_boundary = second
 
-    return valid_boundaries, segments, slides
+    return valid_boundaries, segments, images[:, boundaries[0][0]:boundaries[1][0], boundaries[0][1]:boundaries[1][1]]
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
