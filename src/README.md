@@ -14,15 +14,20 @@ Update the variable `VIDEO_ID` (line #10) in `src/conf.py` with your `<VIDEO_ID>
 ```shell script
 cd /path/to/MIIS-Capstone
 export export PYTHONPATH="$PWD"
+
 conda activate jingrong
 python src/0_ocr_extract_slide_text.py
 python src/1_segmentation.py
 python src/2_transcript_preproc_on_youtube_asr.py
 python src/3_grammar_correction.py
-python src/5_key_concept_extraction.py
 conda deactivate
+
 conda activate summertime
 python src/4_brief_and_detailed_summarization.py
+conda deactivate
+
+conda activate jingrong
+python src/5_key_concept_extraction.py
 ```
 
 The outputs will be saved to `/mnt/capstone/data/results/<VIDEO_ID>.json`.
@@ -50,15 +55,15 @@ The outputs will be saved to `/mnt/capstone/data/results/<VIDEO_ID>.json`.
             "start_timestamp": "00:00:00",
             "transcript": "Okay, we might...",
             "transcript_corrected": "Okay, we might have...",
+            "summary_brief": "Hello everyone...",
+            "summary_detailed": "Today's lecture is...",
             "topk_concepts": [
                 {
                     "concept": "speech",
-                    "term_count_in_transcript": 5
+                    "term_count_in_transcript_and_summary": 5
                 },  # one dict for each concept for this segments
                 ...
-            ],
-            "summary_brief": "Hello everyone...",
-            "summary_detailed": "Today's lecture is..."
+            ]
         },  # one dict for each segment
         ...
     ],
