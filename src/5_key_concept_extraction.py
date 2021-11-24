@@ -72,12 +72,20 @@ def extract_key_concepts(text_list: List[str],
     return key_concepts
 
 
-def topk_concepts_for_lecture(key_concepts: Dict[str, Dict[str, Any]], k: int) -> List[Dict[str, Any]]:
+def importance_score(concept: str, info: Dict[str, Any]) -> float:
+    slide_score = info['term_count_in_slides'] + 5 * info['in_slide_title']
+    dbpedia_labels = [res['Label'] for res in info['dbpedia_results']]
+    dbpedia_hit_score = '\n'.join(dbpedia_labels).lower().count(concept)
+    phrase_bonus = 3 * (' ' in concept) + concept.count(' ')
+    return slide_score * 0.5 + phrase_bonus * 0.5 + dbpedia_hit_score * 0.0
+
+
+def topk_concepts_for_lecture(key_concepts: Dict[str, Dict[str, Any]],  k: int) -> List[Dict[str, Any]]:
     key_concepts_with_score = []
     for concept, info in key_concepts.items():
         key_concepts_with_score.append({
             'concept': concept,
-            'score': info['term_count_in_slides'] + 4 * info['in_slide_title'] + 3 * (' ' in concept)
+            'score': round(importance_score(concept, info), 2)
         })
     topk_concepts = sorted(key_concepts_with_score, key=lambda x: x['score'], reverse=True)[:k]
     return topk_concepts
@@ -85,15 +93,17 @@ def topk_concepts_for_lecture(key_concepts: Dict[str, Dict[str, Any]], k: int) -
 
 def topk_concepts_for_segment(key_concepts: Dict[str, Dict[str, Any]],
                               transcript: str,
+                              summary: str,
                               top_concepts_lecture: Set[str],
                               k: int,
                               min_cnt: int = 3) -> List[Dict[str, Any]]:
     transcript = transcript.lower()
-    concept_counter = Counter({concept: transcript.count(concept) for concept in key_concepts
+    summary = summary.lower()
+    concept_counter = Counter({concept: (transcript + '\n' + summary).count(concept) for concept in key_concepts
                                if concept in top_concepts_lecture})
     topk_concepts = [{
         'concept': concept,
-        'term_count_in_transcript': cnt
+        'term_count_in_transcript_and_summary': cnt
     } for concept, cnt in concept_counter.most_common() if cnt >= min_cnt and key_concepts[concept]['in_slide_title']]
     return topk_concepts[:k]
 
@@ -117,6 +127,7 @@ def run():
     for seg in tqdm(data['segments'], desc='Extract top k for each segment', total=len(data['segments']), ncols=80):
         seg['topk_concepts'] = topk_concepts_for_segment(key_concepts=key_concepts,
                                                          transcript=seg['transcript_corrected'],
+                                                         summary=seg['summary_brief'] + '\n' + seg['summary_detailed'],
                                                          top_concepts_lecture=set(x['concept'] for x in topk_concepts),
                                                          k=MAX_KEY_CONCEPTS_PER_SEGMENT,
                                                          min_cnt=2)
