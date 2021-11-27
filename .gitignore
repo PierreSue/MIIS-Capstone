@@ -12,8 +12,14 @@ __pycache__/
 thumbs.db
 .DS_Store
 
+
 .idea/
 *.pt
 src/models/punctuation_restoration/data/bn
 src/models/punctuation_restoration/data/en
 .vscode
+
+
+brief_model/train_model
+*.zip
+*.zip*
