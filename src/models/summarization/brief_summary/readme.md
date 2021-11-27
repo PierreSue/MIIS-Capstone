@@ -16,7 +16,7 @@ Input is a json array, in which each element is a dictionary containing timestam
     {
         "start_timestamp": "00:00:00",
         "transcript": "Okay, xxxx vocal",
-        "transcript-corrected": "Okay, xxxx vocal"
+        "transcript_corrected": "Okay, xxxx vocal"
     }
 ]
 
@@ -27,8 +27,10 @@ I will add an abstractive summarization into the output file, which makes each e
     {
         "start_timestamp": "00:00:00",
         "transcript": "Okay, xxxx vocal",
-        "transcript-corrected": "Okay, xxxx vocal",
-        "summary-brief": "xx"
+        "transcript_corrected": "Okay, xxxx vocal",
+        "summary_brief": "xx"
     }
 
 ]
+
+Finetuned model will be automatically downloaded if not existed. Remember to set the PYTHONPATH to the root directory of the project.
