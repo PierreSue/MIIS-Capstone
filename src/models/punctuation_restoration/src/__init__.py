@@ -1,8 +1,2 @@
-# encoding: utf-8
-"""
-@author: Jingrong Feng
-@contact: jingronf@andrew.cmu.edu
-@version: 0.1
-@file: __init__.py.py
-@time: 10/15/21
-"""
+from .config import *
+from .model import DeepPunctuation, DeepPunctuationCRF

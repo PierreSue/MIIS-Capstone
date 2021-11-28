@@ -1,8 +1,4 @@
 # encoding: utf-8
-"""
-@author: Jingrong Feng
-@contact: jingronf@andrew.cmu.edu
-@version: 0.1
-@file: __init__.py.py
-@time: 11/12/21
-"""
+# from .utils import query_in_dbpedia
+from .wikipedia_search_v2 import search_key_concepts, multi_search_wrapper, transcript_clean
+from .DocSim import DocSim

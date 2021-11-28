@@ -86,6 +86,10 @@ def is_segment_boundary(batch_second_text: List[Tuple[int, Dict[str, str]]],
     # 2. segment_interval > min_interval (skip too short segments)
     # 3. diff_ratio between the previous frame and the next frame  > threshold_ratio
     # 4. min(diff_ratios of previous K frames) > threshold_ratio
+    # [PS] If all of the text are empty (full of pictures), return True as well
+    if cur_text == last_text == next_text == '' and cur_second - last_boundary > min_interval:
+        return True
+
     if diff_ratio_prev_cur > threshold_ratio and cur_second - last_boundary > min_interval:
         if diff_ratio_prev_next <= threshold_ratio:
             return False

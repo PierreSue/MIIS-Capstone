@@ -1,8 +1,2 @@
-# encoding: utf-8
-"""
-@author: Jingrong Feng
-@contact: jingronf@andrew.cmu.edu
-@version: 0.1
-@file: __init__.py.py
-@time: 10/15/21
-"""
+from .brief_summary.abstractive_sum import brief_summary
+from .detailed_summary.bart_inference import detailed_summary
