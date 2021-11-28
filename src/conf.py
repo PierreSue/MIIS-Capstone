@@ -7,6 +7,7 @@
 @time: 11/2/21
 """
 DATA_DIR = '/mnt/capstone/data/'
+MODEL_DIR = '/mnt/capstone/data/checkpoints/'
 VIDEO_ID = '11692_1'
 KEYPHRASE_NGRAM_RANGE = [2, 3]
 NUM_KEY_CONCEPTS_PER_LECTURE = 15
