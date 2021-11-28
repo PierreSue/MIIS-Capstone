@@ -43,11 +43,12 @@ def inference():
     deep_punctuation.load_state_dict(torch.load(model_save_path))
     deep_punctuation.eval()
 
-    with open(args.in_file, 'r', encoding='utf-8') as f:
+    infile, outfile = 'tmpin.txt', 'tmpout.txt'
+    with open(infile, 'r', encoding='utf-8') as f:
         text = f.read()
+
     text = re.sub(r"[,:\-–.!;?]", '', text)
-    words_original_case = text.split()
-    words = text.lower().split()
+    words_original_case, words = text.split(), text.lower().split()
 
     word_pos = 0
     sequence_len = args.sequence_length

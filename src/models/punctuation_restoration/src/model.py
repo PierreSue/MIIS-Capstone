@@ -1,6 +1,6 @@
 import torch.nn as nn
 import torch
-from config import *
+from .config import *
 from torchcrf import CRF
 
 

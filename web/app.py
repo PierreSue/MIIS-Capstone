@@ -1,68 +1,125 @@
+import os
+import sys
+import json
+import heapq
+from collections import defaultdict
+
 from flask_cors import CORS
 from flask import (Flask, render_template, flash,
                     request, jsonify, Markup)
-from web.search_engine import Segs2BM25, SearchByQuery
+from search_engine import Segs2BM25, SearchByQuery
 
-import json
 
 application = Flask(__name__)
 CORS(application)
 
 @application.before_first_request
 def startup():
+    global OutputPath, JsonList, BM25Model, SegmentMap
 
-    global BM25Model, SegmentMap
+    OutputPath = sys.argv[1]
+    print("This is the path to the data directory: {} /jsons /imgs".format(OutputPath))
+
+    jsonpath = os.path.join(OutputPath, 'jsons')
+    jsonfiles = [os.path.join(jsonpath, f) for f in os.listdir(jsonpath) if f.endswith('.json')]
     
-    with open('/home/pierre/Capstone/Data/segmented_transcript-grammar_corrected.json', 'r') as fp:
-        JsonList = json.load(fp)
+    JsonList = []
+    for jsonfile in jsonfiles:
+        with open(jsonfile, 'r', encoding='utf8') as json_file:
+            ID = os.path.splitext(os.path.basename(jsonfile))[0]
+            JsonList[ID] = json.load(json_file)
     
-    SegmentMap = {}
-    for segment in JsonList:
-        SegmentMap[segment['start_timestamp']] = [segment["transcript-corrected"]]
-    BM25Model = Segs2BM25(SegmentMap)
+    SegmentMap, BM25Model = {}, {}
+    for ID, content in JsonList.items():
+        SegmentMap[ID] = {}
+        for segment in content['segments']:
+            references = [segment["transcript-corrected"]]
+            for concept, info in segment['key_concepts'].items():
+                references.append(info['Summary'])
+            SegmentMap[ID][segment['start_timestamp']] = references
+        BM25Model[ID] = Segs2BM25(SegmentMap[ID])
 
 
+# Input  = {'topn': top N keywords (Default 3)}
+# Output = [lectures{'ID', 'name', 'description', 'lecturerName', 'lecturerAvatar', 'time', 'keywords'}]
+@application.route('/retrieve_gallery', methods=['POST', 'GET'])
+def retrieve_gallery():
+    topn = request.args.get('topn', default=3)
+
+    lectures = []
+    for ID, content in JsonList.items():
+        conceptMap = defaultdict(float)
+        for segment in content['segments']:
+            for concept, info in segment['key_concepts'].items():
+                bias = (len(concept.split())-1)*0.1
+                conceptMap[concept] = max(conceptMap[concept], info['Score']+bias)
+        concepts = heapq.nlargest(topn, conceptMap.keys(), key=lambda k: conceptMap[k])
+
+        lectures.append({'ID': content['ID'], 'name': content['name'], 'description': content['description'], \
+                         'lecturerName': content['lecturerName'], \
+                         'lecturerAvatar': os.path.join(OutputPath, 'imgs', content['lecturerAvatar']), \
+                         'time': content['time'], 'keywords': concepts})
+    
+    return jsonify(lectures)
+
+
+# Input  = {'ID': lecture_id, 'Query': input_query, 'topn': N (Default 3)}
+# Output = {'scores': scores, 'topn': top N segments based on the query}
 @application.route('/search_engine', methods=['POST', 'GET'])
 def search_engine():
+    ID = request.args.get('ID')
     Query = request.args.get('Query')
-    topn = request.args.get('topn', default=min(3, len(SegmentMap)))
+    topn = request.args.get('topn', default=min(3, len(SegmentMap[ID])))
 
-    print(Query)
-
-    results = SearchByQuery(Query, BM25Model, topn=topn)
+    results = SearchByQuery(Query, BM25Model[ID], topn=topn)
     return jsonify({'scores': results[0], 'topn': results[1]})
 
 
+# Input  = {'ID': lecture_id}
+# Output = [segments{'start_timestamp', 'transcript-corrected'}]
 @application.route('/transcript', methods=['POST', 'GET'])
 def transcript():
-    video_idx = request.form.get('video_idx')
-    assert video_idx is not None
-    #the path should be constructed according to the video_idx
-    smry_path = f"/mnt/capstone/data/transcript-summary_{video_idx}.json"
-    res = []
-    with open(smry_path,'r',encoding='utf8') as f:
-        infos = json.load(f)   
-    assert(len(infos) >= 1)
-    for i,info in enumerate(infos):
-        info.pop("transcript")
-        info.pop("summary-brief")
-        info.pop("summary-detailed")
-        res.append(info)
-    print(jsonify(res))
-    return jsonify(res)
+    ID = request.form.get('ID')
 
+    segments = []
+    for segment in JsonList[ID]['segments']:
+        segments.append({'start_timestamp': segment['start_timestamp'], 'transcript-corrected': segment['transcript-corrected']})
+    return jsonify(segments)
+
+
+# Input  = {'ID': lecture_id}
+# Output = [segments{'summary-brief', 'summary-detailed'}]
 @application.route('/summary', methods=['POST', 'GET'])
 def summary():
-    video_idx = request.form.get('video_idx')
-    assert video_idx is not None
-    #the path should be constructed according to the video_idx
-    smry_path = f"/mnt/capstone/data/transcript-summary_{video_idx}.json"
-    res = []
-    with open(smry_path,'r',encoding='utf8') as f:
-        infos = json.load(f)   
-    assert(len(infos) >= 1)
-    for i,info in enumerate(infos):
-        info.pop("transcript")
-        info.pop("transcript-corrected")
-        res.append(info)
-    return jsonify(res)
+    ID = request.form.get('ID')
+
+    segments = []
+    for segment in JsonList[ID]['segments']:
+        segments.append({'summary-brief': segment['summary_brief'], 'summary-detailed': segment['summary_detailed']})
+    return jsonify(segments)
+
+
+# Input  = {'ID': lecture_id, topn: top N keywords for each segment(Default 2)}
+# Output = [segments{'keywords'}]
+@application.route('/keywords', methods=['POST', 'GET'])
+def keywords():
+    ID = request.form.get('ID')
+    topn = request.args.get('topn', default=2)
+
+    segments = []
+    for segment in JsonList[ID]['segments']:
+        conceptMap = defaultdict(float)
+        for concept, info in segment['key_concepts'].items():
+            bias = (len(concept.split())-1)*0.1
+            conceptMap[concept] = max(conceptMap[concept], info['Score']+bias)
+
+        keywords = {}
+        concepts = heapq.nlargest(topn, conceptMap.keys(), key=lambda k: conceptMap[k])
+        for concept in concepts:
+            keywords[concept] = {"Summary": segment['key_concepts'][concept]["Summary"], "URL": segment['key_concepts'][concept]["URL"]}
+        segments.append({'keywords': keywords})
+    return jsonify(segments)
+
+if __name__ == '__main__':
+    application.debug = False
+    application.run(host='0.0.0.0')

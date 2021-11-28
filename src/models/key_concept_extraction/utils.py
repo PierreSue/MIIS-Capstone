@@ -49,9 +49,9 @@ def query_in_dbpedia(query: str, incl_desc: bool = False) -> List[Dict]:
         if not item['Label']:
             continue
         if incl_desc and item['Description']:
-            item_content = item['Label'].lower() + '\n' + item['Description'].lower()
+            item_content = str(item['Label']).lower() + '\n' + str(item['Description']).lower()
         else:
-            item_content = item['Label'].lower()
+            item_content = str(item['Label']).lower()
         if (query in item_content or
                 (query[-1] == 's' and query[:-1] in item_content) or
                 (query[-2:] == 'es' and query[:-2] in item_content)):

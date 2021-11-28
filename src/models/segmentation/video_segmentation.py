@@ -19,17 +19,16 @@ Command Arguments
 Return:
 List[str]: timestamps of segment boundaries in HH:MM:SS format
 """
-import argparse
-import json
 import os
-from time import strftime, gmtime
-from typing import List
-
 import cv2
+import json
+import argparse
 import numpy as np
-from tqdm import tqdm
 
-from src.models.segmentation.utils import is_segment_boundary, OCRTextExtractor
+from tqdm import tqdm
+from typing import List
+from time import strftime, gmtime
+from .utils import is_segment_boundary, OCRTextExtractor
 
 
 def video_segmentation(opt: argparse.Namespace) -> List[str]:
@@ -89,20 +88,16 @@ def video_segmentation(opt: argparse.Namespace) -> List[str]:
         else:
             diff_areas.append(np.sum(diff_map) / (m * n))
             if np.sum(diff_map) / (m * n) > opt.threshold_pixel:
-                cutpoints.append((image_id + 1) * opt.interval)
+                cutpoints.append((image_id+1, (image_id+1)*opt.interval))
 
-    for i, cutpoint in enumerate(cutpoints):
-        cutpoints[i] = (cutpoint // opt.interval, cutpoint)
-
-    print("Cutpoints at the first stage:")
-    for idx, cutpoint in enumerate(cutpoints):
-        print(idx + 1, '\t', strftime("%H:%M:%S", gmtime(cutpoint[1])))
+    print("Cutpoints at the first stage: {} cutpoints".format(len(cutpoints)))
+    print([strftime("%H:%M:%S", gmtime(cutpoint[1])) for cutpoint in cutpoints])
 
     # images: the images stored using numpy -> (num_frames, frameHeight, frameWidth, 3)
     # cutpoints: the list of the cutpoints(tuples) -> [(image_id, timestamp_in_seconds), (), ...]
 
     ocr_extractor = OCRTextExtractor()
-    valid_boundaries = []
+    valid_boundaries, segments = [], [0]
     last_boundary = 0
     for idx, (image_id, second) in tqdm(enumerate(cutpoints), total=len(cutpoints), desc='Second stage', ncols=80):
         # the first and last one frames cannot be boundaries
@@ -120,10 +115,14 @@ def video_segmentation(opt: argparse.Namespace) -> List[str]:
         if is_segment_boundary(batch_second_text, cur_idx=num_prev_frame, last_boundary=last_boundary,
                                threshold_ratio=opt.edit_distance_threshold, min_interval=opt.min_interval):
             valid_boundaries.append(strftime("%H:%M:%S", gmtime(second)))
+            segments.append(image_id)
             last_boundary = second
 
-    return valid_boundaries
+    print("Cutpoints at the second stage: {} cutpoints".format(len(valid_boundaries)))
+    print(valid_boundaries)
 
+    return valid_boundaries, segments, images[:, boundaries[0][0]:boundaries[1][0], boundaries[0][1]:boundaries[1][1]],\
+           strftime("%H:%M:%S", gmtime(len(slides)*opt.interval)
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
