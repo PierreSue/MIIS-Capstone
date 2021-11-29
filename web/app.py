@@ -17,13 +17,16 @@ CORS(application)
 def startup():
     global OutputPath, JsonList, BM25Model, SegmentMap
 
-    OutputPath = sys.argv[1]
+    try:
+        OutputPath = sys.argv[1]
+    except:
+        OutputPath = '../output'
     print("This is the path to the data directory: {} /jsons /imgs".format(OutputPath))
 
     jsonpath = os.path.join(OutputPath, 'jsons')
     jsonfiles = [os.path.join(jsonpath, f) for f in os.listdir(jsonpath) if f.endswith('.json')]
     
-    JsonList = []
+    JsonList = {}
     for jsonfile in jsonfiles:
         with open(jsonfile, 'r', encoding='utf8') as json_file:
             ID = os.path.splitext(os.path.basename(jsonfile))[0]
@@ -44,7 +47,7 @@ def startup():
 # Output = [lectures{'ID', 'name', 'description', 'lecturerName', 'lecturerAvatar', 'time', 'keywords'}]
 @application.route('/retrieve_gallery', methods=['POST', 'GET'])
 def retrieve_gallery():
-    topn = request.args.get('topn', default=3)
+    topn = int(request.args.get('topn', default=3))
 
     lectures = []
     for ID, content in JsonList.items():
@@ -52,13 +55,13 @@ def retrieve_gallery():
         for segment in content['segments']:
             for concept, info in segment['key_concepts'].items():
                 bias = (len(concept.split())-1)*0.1
-                conceptMap[concept] = max(conceptMap[concept], info['Score']+bias)
+                conceptMap[concept] = max(conceptMap[concept], float(info['Score'])+bias)
         concepts = heapq.nlargest(topn, conceptMap.keys(), key=lambda k: conceptMap[k])
 
         lectures.append({'ID': content['ID'], 'name': content['name'], 'description': content['description'], \
                          'lecturerName': content['lecturerName'], \
                          'lecturerAvatar': os.path.join(OutputPath, 'imgs', content['lecturerAvatar']), \
-                         'time': content['time'], 'keywords': concepts})
+                         'time': content['time'], 'keywords': concepts, 'videoURL': concepts['youtube_link']})
     
     return jsonify(lectures)
 
@@ -69,33 +72,36 @@ def retrieve_gallery():
 def search_engine():
     ID = request.args.get('ID')
     Query = request.args.get('Query')
-    topn = request.args.get('topn', default=min(3, len(SegmentMap[ID])))
+    topn = int(request.args.get('topn', default=min(3, len(SegmentMap[ID]))))
+
+    if len(Query) == 0 or Query:
+        return
 
     results = SearchByQuery(Query, BM25Model[ID], topn=topn)
     return jsonify({'scores': results[0], 'topn': results[1]})
 
 
 # Input  = {'ID': lecture_id}
-# Output = [segments{'start_timestamp', 'transcript-corrected'}]
+# Output = [segments{'start_timestamp', 'transcript_corrected'}]
 @application.route('/transcript', methods=['POST', 'GET'])
 def transcript():
-    ID = request.form.get('ID')
+    ID = request.args.get('ID')
 
     segments = []
     for segment in JsonList[ID]['segments']:
-        segments.append({'start_timestamp': segment['start_timestamp'], 'transcript-corrected': segment['transcript-corrected']})
+        segments.append({'transcript_corrected': segment['transcript-corrected']})
     return jsonify(segments)
 
 
 # Input  = {'ID': lecture_id}
-# Output = [segments{'summary-brief', 'summary-detailed'}]
+# Output = [segments{'summary_brief', 'summary_detailed'}]
 @application.route('/summary', methods=['POST', 'GET'])
 def summary():
-    ID = request.form.get('ID')
+    ID = request.args.get('ID')
 
     segments = []
     for segment in JsonList[ID]['segments']:
-        segments.append({'summary-brief': segment['summary_brief'], 'summary-detailed': segment['summary_detailed']})
+        segments.append({'start_timestamp': segment['start_timestamp'], 'summary_brief': segment['summary_brief'], 'summary_detailed': segment['summary_detailed']})
     return jsonify(segments)
 
 
@@ -103,15 +109,15 @@ def summary():
 # Output = [segments{'keywords'}]
 @application.route('/keywords', methods=['POST', 'GET'])
 def keywords():
-    ID = request.form.get('ID')
-    topn = request.args.get('topn', default=2)
+    ID = request.args.get('ID')
+    topn = int(request.args.get('topn', default=2))
 
     segments = []
     for segment in JsonList[ID]['segments']:
         conceptMap = defaultdict(float)
         for concept, info in segment['key_concepts'].items():
             bias = (len(concept.split())-1)*0.1
-            conceptMap[concept] = max(conceptMap[concept], info['Score']+bias)
+            conceptMap[concept] = max(conceptMap[concept], float(info['Score'])+bias)
 
         keywords = {}
         concepts = heapq.nlargest(topn, conceptMap.keys(), key=lambda k: conceptMap[k])
