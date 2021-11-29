@@ -121,8 +121,8 @@ def video_segmentation(opt: argparse.Namespace) -> List[str]:
     print("Cutpoints at the second stage: {} cutpoints".format(len(valid_boundaries)))
     print(valid_boundaries)
 
-    return valid_boundaries, segments, images[:, boundaries[0][0]:boundaries[1][0], boundaries[0][1]:boundaries[1][1]],\
-           strftime("%H:%M:%S", gmtime(len(slides)*opt.interval)
+    return valid_boundaries, segments, images[:, boundaries[0][0]:boundaries[1][0], boundaries[0][1]:boundaries[1][1]], \
+           strftime("%H:%M:%S", gmtime(len(slides)*opt.interval))
 
 def parse_arguments():
     parser = argparse.ArgumentParser()

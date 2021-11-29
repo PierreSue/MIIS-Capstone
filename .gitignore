@@ -20,6 +20,8 @@ src/models/punctuation_restoration/data/en
 .vscode
 
 
-brief_model/train_model
+src/brief_model/train_model
 *.zip
 *.zip*
+
+src/summertime

@@ -14,7 +14,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 from transformers import PegasusForConditionalGeneration, PegasusTokenizer
 import torch
 import gdown
-from src.conf import MODEL_DIR
+from tqdm import tqdm
 from zipfile import ZipFile
 
 def brief_summary(srces):
@@ -33,7 +33,7 @@ def brief_summary(srces):
             zip_ref.extractall(train_path)
     model = PegasusForConditionalGeneration.from_pretrained(train_path+"train_model/").to(device)
     res = []
-    for text in srces:
+    for text in tqdm(srces, total=len(srces), desc='Brief Summarization', ncols=80) :
         src = [text]
         batch = tokenizer(src, truncation=True, padding='longest', return_tensors="pt").to(device)
         translated = model.generate(**batch)
@@ -47,6 +47,8 @@ def brief_summary(srces):
             tgt = tmp_tgt[0]
         tgt = tgt.split(".")[0] + "."
         res.append(tgt)
+
+    del model
     return res
 
 if __name__ == "__main__":
