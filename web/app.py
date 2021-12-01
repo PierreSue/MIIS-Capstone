@@ -122,7 +122,7 @@ def keywords():
         keywords = {}
         concepts = heapq.nlargest(topn, conceptMap.keys(), key=lambda k: conceptMap[k])
         for concept in concepts:
-            keywords[concept] = {"Summary": segment['key_concepts'][concept]["Summary"], "URL": segment['key_concepts'][concept]["URL"]}
+            keywords[concept] = {"Summary": segment['key_concepts'][concept]["Summary"], "URL": segment['key_concepts'][concept]["URL"], "Related_Concepts": segment['key_concepts'][concept]["Related_Concepts"]}
         segments.append({'keywords': keywords})
     return jsonify(segments)
 
