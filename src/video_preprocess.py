@@ -22,7 +22,7 @@ from models.punctuation_restoration import punctuation_restoration_v2
 from models.segmentation import video_segmentation, OCRTextExtractor
 from models.transcript_preprocess import transcript_preprocess
 from models.summarization import brief_summary, detailed_summary
-from models.key_concept_extraction import multi_search_wrapper, DocSim, transcript_clean, search_key_concepts
+from models.key_concept_extraction import multi_search_wrapper, DocSim, transcript_clean, search_key_concepts, get_related_concepts_wordnet
 
 
 def parse_arguments():
@@ -67,10 +67,12 @@ if __name__ == '__main__':
     if not os.path.exists(os.path.dirname(opt.output_path)):
         os.makedirs(os.path.dirname(opt.output_path))
     if os.path.exists(opt.image_dir):
-        val = input("Remove all the contents in the directory: {} | [Y]/N : ".format(opt.image_dir))
-        if val in {'Y', 'y', ''}:
-            shutil.rmtree(opt.image_dir)
-            os.makedirs(opt.image_dir)
+        # val = input("Remove all the contents in the directory: {} | [Y]/N : ".format(opt.image_dir))
+        # if val in {'Y', 'y', ''}:
+        #     shutil.rmtree(opt.image_dir)
+        #     os.makedirs(opt.image_dir)
+        shutil.rmtree(opt.image_dir)
+        os.makedirs(opt.image_dir)
     else:
         os.makedirs(opt.image_dir)
 
@@ -179,7 +181,7 @@ if __name__ == '__main__':
         sim_scores = ds.calculate_similarity(source_doc, target_docs)
         for sim_score, content in zip(sim_scores, wikicontent):
             if sim_score['score'] > opt.concept_threshold:
-                data['segments'][entry_id]['key_concepts'][content['Concept']] = {'Score': str(sim_score['score']), 'Summary': content['Summary'], 'URL': content['URL']}
+                data['segments'][entry_id]['key_concepts'][content['Concept']] = {'Score': str(sim_score['score']), 'Summary': content['Summary'], 'URL': content['URL'], 'Related_Concepts':get_related_concepts_wordnet(content['Concept'])}
     
     with open(opt.output_path, 'w') as json_file:
         json.dump(data, json_file, indent=4, ensure_ascii=False)
